@@ -1,7 +1,8 @@
 import { useEffect, useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { subscribeToRoom, startGame, kickPlayer, leaveRoom, setGameMode } from '../firebase'
+import { subscribeToRoom, startGame, startMysteryGame, kickPlayer, leaveRoom, setGameMode } from '../firebase'
 import { pickCard } from '../data/index'
+import { getRandomScenario, assignRolesAndClues } from '../data/mysteryScenarios'
 import { GAME_MODES } from '../data/gameModes'
 import { sounds } from '../sounds'
 
@@ -46,18 +47,14 @@ export default function Lobby({ roomCode, playerId, playerName, onGameStart, onL
     }
     setStarting(true)
     try {
-      const firstCard = pickCard(selectedMode, {}, 5)
-      // For Mystery mode: pick a random non-host player as the agent
-      let agentId = null
       if (selectedMode === 'mystery') {
-        const nonHostPlayers = players.filter(([pid]) => pid !== playerId)
-        if (nonHostPlayers.length > 0) {
-          agentId = nonHostPlayers[Math.floor(Math.random() * nonHostPlayers.length)][0]
-        } else {
-          agentId = players[0][0]
-        }
+        const scenario = getRandomScenario()
+        const { roles, clues } = assignRolesAndClues(players, scenario)
+        await startMysteryGame(roomCode, scenario, roles, clues)
+      } else {
+        const firstCard = pickCard(selectedMode, {}, 5)
+        await startGame(roomCode, firstCard)
       }
-      await startGame(roomCode, firstCard, agentId)
       sounds.gameStart()
     } catch (e) {
       showToast('Failed to start. Try again.')

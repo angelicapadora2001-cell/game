@@ -84,6 +84,85 @@ export function subscribeToRoom(roomCode, callback) {
   return () => off(roomRef)
 }
 
+// ── MURDER MYSTERY ────────────────────────────────────────────────────────────
+
+export async function startMysteryGame(roomCode, scenario, roles, clues) {
+  const updates = {}
+  updates[`rooms/${roomCode}/status`] = 'playing'
+  updates[`rooms/${roomCode}/gameMode`] = 'mystery'
+  updates[`rooms/${roomCode}/gameStartedAt`] = Date.now()
+  updates[`rooms/${roomCode}/mysteryGame`] = {
+    phase: 'role_reveal',
+    scenarioId: scenario.id,
+    scenarioName: scenario.name,
+    scenarioEmoji: scenario.emoji,
+    scenarioSetting: scenario.setting,
+    victimName: scenario.victim.name,
+    victimRole: scenario.victim.role,
+    victimDescription: scenario.victim.description,
+    explorationDuration: 180,
+    explorationStartedAt: null,
+    murderAt: null,
+    convicted: null,
+  }
+  Object.entries(roles).forEach(([pid, roleData]) => {
+    updates[`rooms/${roomCode}/mysteryRoles/${pid}`] = roleData
+  })
+  clues.forEach((clue, i) => {
+    updates[`rooms/${roomCode}/mysteryClues/c${i}`] = { ...clue, revealed: false }
+  })
+  await update(ref(db), updates)
+}
+
+export async function markMysteryReady(roomCode, playerId) {
+  await set(ref(db, `rooms/${roomCode}/mysteryRoles/${playerId}/ready`), true)
+}
+
+export async function startMysteryExploration(roomCode) {
+  await update(ref(db, `rooms/${roomCode}/mysteryGame`), {
+    phase: 'exploration',
+    explorationStartedAt: Date.now(),
+  })
+}
+
+export async function commitMurder(roomCode, timeRemaining) {
+  await push(ref(db, `rooms/${roomCode}/mysteryActivity`), {
+    type: 'murder',
+    at: Date.now(),
+    timeRemaining: Math.round(timeRemaining),
+  })
+  await update(ref(db, `rooms/${roomCode}/mysteryGame`), {
+    phase: 'accusation',
+    murderAt: Date.now(),
+  })
+}
+
+export async function logPrivateChat(roomCode, fromId, fromName, toId, toName) {
+  await push(ref(db, `rooms/${roomCode}/mysteryActivity`), {
+    type: 'chat', fromId, fromName, toId, toName, at: Date.now(),
+  })
+}
+
+export async function logChatDeclined(roomCode, fromId, fromName, toId, toName) {
+  await push(ref(db, `rooms/${roomCode}/mysteryActivity`), {
+    type: 'declined', fromId, fromName, toId, toName, at: Date.now(),
+  })
+}
+
+export async function castMysteryVote(roomCode, voterId, targetId) {
+  await set(ref(db, `rooms/${roomCode}/mysteryVotes/${voterId}`), targetId)
+}
+
+export async function revealVerdict(roomCode, convictedId) {
+  await update(ref(db, `rooms/${roomCode}/mysteryGame`), {
+    phase: 'verdict',
+    convicted: convictedId,
+    revealedAt: Date.now(),
+  })
+}
+
+// ── END MYSTERY ───────────────────────────────────────────────────────────────
+
 export async function setGameMode(roomCode, mode) {
   await update(ref(db, `rooms/${roomCode}`), { gameMode: mode })
 }

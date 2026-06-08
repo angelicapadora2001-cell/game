@@ -31,9 +31,9 @@ export const GAME_MODES = {
   },
   mystery: {
     id: 'mystery',
-    name: 'Mystery',
+    name: 'Murder Mystery',
     emoji: '🕵️',
-    tagline: 'One traitor. Zero trust. Find them.',
+    tagline: 'Secret roles. A real murder. One killer among you.',
     color: '#6366f1',
     from: 'from-indigo-600',
     to: 'to-violet-700',

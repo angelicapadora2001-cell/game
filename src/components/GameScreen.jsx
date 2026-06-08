@@ -11,10 +11,11 @@ import {
 import { pickCard, getCategoryMeta } from '../data/index'
 import { GAME_MODES } from '../data/gameModes'
 import { sounds } from '../sounds'
+import MysteryGame from './MysteryGame'
 
 const ROUND_SECONDS = 30
 
-export default function GameScreen({ roomCode, playerId, onLeave, showToast }) {
+export default function GameScreen({ roomCode, playerId, playerName, onLeave, showToast }) {
   const [room, setRoom] = useState(null)
   const [timeLeft, setTimeLeft] = useState(ROUND_SECONDS)
   const [showRules, setShowRules] = useState(false)
@@ -117,6 +118,11 @@ export default function GameScreen({ roomCode, playerId, onLeave, showToast }) {
 
   async function handleEndGame() {
     try { await endGame(roomCode) } catch (_) { showToast('Error ending game.') }
+  }
+
+  // Murder Mystery has its own full-screen component
+  if (room?.gameMode === 'mystery') {
+    return <MysteryGame roomCode={roomCode} playerId={playerId} onLeave={onLeave} showToast={showToast} />
   }
 
   if (!room) {
