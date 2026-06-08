@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import LandingPage from './components/LandingPage'
 import Lobby from './components/Lobby'
 import GameScreen from './components/GameScreen'
-import { generatePlayerId, isFirebaseConfigured } from './firebase'
+import { generatePlayerId } from './firebase'
 
 const PLAYER_ID_KEY = 'chaos_player_id'
 const ROOM_CODE_KEY = 'chaos_room_code'
@@ -51,27 +51,6 @@ export default function App() {
   }
 
   if (!playerId) return null
-
-  if (!isFirebaseConfigured()) {
-    return (
-      <div className="min-h-screen bg-[#0a0a14] flex items-center justify-center p-6">
-        <div className="max-w-md w-full text-center space-y-4">
-          <div className="text-6xl">⚙️</div>
-          <h1 className="text-2xl font-bold text-white">Firebase Setup Required</h1>
-          <p className="text-white/60 text-sm leading-relaxed">
-            Copy <code className="text-purple-400 bg-white/10 px-1.5 py-0.5 rounded">.env.example</code> to{' '}
-            <code className="text-purple-400 bg-white/10 px-1.5 py-0.5 rounded">.env</code> and add your Firebase credentials.
-          </p>
-          <div className="bg-white/5 rounded-xl p-4 text-left text-xs text-white/50 font-mono space-y-1">
-            <p>1. Create a project at firebase.google.com</p>
-            <p>2. Enable Realtime Database (test mode)</p>
-            <p>3. Copy web app config to .env</p>
-            <p>4. Restart the dev server</p>
-          </div>
-        </div>
-      </div>
-    )
-  }
 
   const slideVariants = {
     enter: { opacity: 0, x: 40, scale: 0.97 },
