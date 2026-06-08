@@ -84,15 +84,21 @@ export function subscribeToRoom(roomCode, callback) {
   return () => off(roomRef)
 }
 
-export async function startGame(roomCode, firstCard) {
-  await update(ref(db, `rooms/${roomCode}`), {
+export async function setGameMode(roomCode, mode) {
+  await update(ref(db, `rooms/${roomCode}`), { gameMode: mode })
+}
+
+export async function startGame(roomCode, firstCard, agentId = null) {
+  const updates = {
     status: 'playing',
     round: 1,
     currentCard: firstCard,
     cardShownAt: Date.now(),
     gameStartedAt: Date.now(),
     chaosLevel: 5,
-  })
+  }
+  if (agentId) updates.agentId = agentId
+  await update(ref(db, `rooms/${roomCode}`), updates)
 }
 
 export async function nextCard(roomCode, card, round, chaosLevel, usedCardId) {
